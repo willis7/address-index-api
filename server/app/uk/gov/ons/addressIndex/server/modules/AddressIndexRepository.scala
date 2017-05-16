@@ -13,7 +13,6 @@ import uk.gov.ons.addressIndex.model.config.QueryParamsConfig
 import uk.gov.ons.addressIndex.model.db.{BulkAddress, BulkAddressRequestData}
 import uk.gov.ons.addressIndex.model.db.index._
 import uk.gov.ons.addressIndex.parsers.Tokens
-
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[AddressIndexRepository])
@@ -116,25 +115,25 @@ class AddressIndexRepository @Inject()(
 
     val saoQuery = Seq(
       tokens.get(Tokens.saoStartNumber).map(token =>
-        constantScoreQuery(matchQuery(
+        constantScoreQuery(nestedQuery("lpi").query(matchQuery(
           field = "lpi.saoStartNumber",
           value = token
-        )).boost(queryParams.subBuildingName.lpiSaoStartNumberBoost)),
+        )).scoreMode("Max")).boost(queryParams.subBuildingName.lpiSaoStartNumberBoost)),
       tokens.get(Tokens.saoStartSuffix).map(token =>
-        constantScoreQuery(matchQuery(
+        constantScoreQuery(nestedQuery("lpi").query(matchQuery(
           field = "lpi.saoStartSuffix",
           value = token
-        )).boost(queryParams.subBuildingName.lpiSaoStartSuffixBoost)),
+        )).scoreMode("Max")).boost(queryParams.subBuildingName.lpiSaoStartSuffixBoost)),
       tokens.get(Tokens.saoEndNumber).map(token =>
-        constantScoreQuery(matchQuery(
+        constantScoreQuery(nestedQuery("lpi").query(matchQuery(
           field = "lpi.saoEndNumber",
           value = token
-        )).boost(queryParams.subBuildingName.lpiSaoEndNumberBoost)),
+        )).scoreMode("Max")).boost(queryParams.subBuildingName.lpiSaoEndNumberBoost)),
       tokens.get(Tokens.saoEndSuffix).map(token =>
-        constantScoreQuery(matchQuery(
+        constantScoreQuery(nestedQuery("lpi").query(matchQuery(
           field = "lpi.saoEndSuffix",
           value = token
-        )).boost(queryParams.subBuildingName.lpiSaoEndSuffixBoost))
+        )).scoreMode("Max")).boost(queryParams.subBuildingName.lpiSaoEndSuffixBoost))
     ).flatten
 
     val subBuildingNameQuery = Seq(
@@ -144,45 +143,45 @@ class AddressIndexRepository @Inject()(
           value = token
         )).boost(queryParams.subBuildingName.pafSubBuildingNameBoost)),
       tokens.get(Tokens.subBuildingName).map(token =>
-        constantScoreQuery(matchQuery(
+        constantScoreQuery(nestedQuery("lpi").query(matchQuery(
           field = "lpi.saoText",
           value = token
-        )).boost(queryParams.subBuildingName.lpiSaoTextBoost)),
+        )).scoreMode("Max")).boost(queryParams.subBuildingName.lpiSaoTextBoost)),
       tokens.get(Tokens.saoStartSuffix).map(token =>
-        constantScoreQuery(matchQuery(
+        constantScoreQuery(nestedQuery("lpi").query(matchQuery(
           field = "lpi.saoStartSuffix",
           value = token
-        )).boost(queryParams.subBuildingName.lpiSaoStartSuffixBoost))
+        )).scoreMode("Max")).boost(queryParams.subBuildingName.lpiSaoStartSuffixBoost))
     ).flatten
 
     val paoQuery = Seq(
       tokens.get(Tokens.paoStartNumber).map(token =>
-        constantScoreQuery(matchQuery(
+        constantScoreQuery(nestedQuery("lpi").query(matchQuery(
           field = "lpi.paoStartNumber",
           value = token
-        )).boost(queryParams.buildingName.lpiPaoStartNumberBoost)),
+        )).scoreMode("Max")).boost(queryParams.buildingName.lpiPaoStartNumberBoost)),
       tokens.get(Tokens.paoStartSuffix).map(token =>
-        constantScoreQuery(matchQuery(
+        constantScoreQuery(nestedQuery("lpi").query(matchQuery(
           field = "lpi.paoStartSuffix",
           value = token
-        )).boost(queryParams.buildingName.lpiPaoStartSuffixBoost)),
+        )).scoreMode("Max")).boost(queryParams.buildingName.lpiPaoStartSuffixBoost)),
       tokens.get(Tokens.paoEndNumber).map(token =>
-        constantScoreQuery(matchQuery(
+        constantScoreQuery(nestedQuery("lpi").query(matchQuery(
           field = "lpi.paoEndNumber",
           value = token
-        )).boost(queryParams.buildingName.lpiPaoEndNumberBoost)),
+        )).scoreMode("Max")).boost(queryParams.buildingName.lpiPaoEndNumberBoost)),
       tokens.get(Tokens.paoEndSuffix).map(token =>
-        constantScoreQuery(matchQuery(
+        constantScoreQuery(nestedQuery("lpi").query(matchQuery(
           field = "lpi.paoEndSuffix",
           value = token
-        )).boost(queryParams.buildingName.lpiPaoEndSuffixBoost))
+        )).scoreMode("Max")).boost(queryParams.buildingName.lpiPaoEndSuffixBoost))
     ).flatten
 
 
     val paoBuildingNameMust = for {
       paoStartNumber <- tokens.get(Tokens.paoStartNumber)
       paoStartSuffix <- tokens.get(Tokens.paoStartSuffix)
-    } yield constantScoreQuery(must(Seq(
+    } yield constantScoreQuery(nestedQuery("lpi").query(must(Seq(
       matchQuery(
         field = "lpi.paoStartNumber",
         value = paoStartNumber
@@ -191,19 +190,19 @@ class AddressIndexRepository @Inject()(
         field = "lpi.paoStartSuffix",
         value = paoStartSuffix
       )
-    ))).boost(queryParams.buildingName.lpiPaoStartSuffixBoost)
+    ))).scoreMode("Max")).boost(queryParams.buildingName.lpiPaoStartSuffixBoost)
 
     val buildingNameQuery: Seq[QueryDefinition] = Seq(
       tokens.get(Tokens.buildingName).map(token =>
-        constantScoreQuery(matchQuery(
+        constantScoreQuery(nestedQuery("lpi").query(matchQuery(
           field = "paf.buildingName",
           value = token
-        ).fuzziness(defaultFuzziness)).boost(queryParams.buildingName.pafBuildingNameBoost)),
+        ).fuzziness(defaultFuzziness)).scoreMode("Max")).boost(queryParams.buildingName.pafBuildingNameBoost)),
       tokens.get(Tokens.buildingName).map(token =>
-        constantScoreQuery(matchQuery(
+        constantScoreQuery(nestedQuery("lpi").query(matchQuery(
           field = "lpi.paoText",
           value = token
-        ).fuzziness(defaultFuzziness)).boost(queryParams.buildingName.lpiPaoTextBoost)),
+        ).fuzziness(defaultFuzziness)).scoreMode("Max")).boost(queryParams.buildingName.lpiPaoTextBoost)),
 
       paoBuildingNameMust
 
@@ -217,10 +216,10 @@ class AddressIndexRepository @Inject()(
           value = token
         )).boost(queryParams.buildingNumber.pafBuildingNumberBoost)),
       tokens.get(Tokens.buildingNumber).map(token =>
-        constantScoreQuery(matchQuery(
+        constantScoreQuery(nestedQuery("lpi").query(matchQuery(
           field = "lpi.paoStartNumber",
           value = token
-        )).boost(queryParams.buildingNumber.lpiPaoStartNumberBoost))
+        )).scoreMode("Max")).boost(queryParams.buildingNumber.lpiPaoStartNumberBoost))
     ).flatten
 
     val streetNameQuery = Seq(
@@ -245,10 +244,10 @@ class AddressIndexRepository @Inject()(
           value = token
         ).fuzziness(defaultFuzziness)).boost(queryParams.streetName.pafWelshDependentThoroughfareBoost)),
       tokens.get(Tokens.streetName).map(token =>
-        constantScoreQuery(matchQuery(
+        constantScoreQuery(nestedQuery("lpi").query(matchQuery(
           field = "lpi.streetDescriptor",
           value = token
-        ).fuzziness(defaultFuzziness)).boost(queryParams.streetName.lpiStreetDescriptorBoost))
+        ).fuzziness(defaultFuzziness)).scoreMode("Max")).boost(queryParams.streetName.lpiStreetDescriptorBoost))
     ).flatten
 
     val townNameQuery = Seq(
@@ -263,10 +262,10 @@ class AddressIndexRepository @Inject()(
           value = token
         ).fuzziness(defaultFuzziness)).boost(queryParams.townName.pafWelshPostTownBoost)),
       tokens.get(Tokens.townName).map(token =>
-        constantScoreQuery(matchQuery(
+        constantScoreQuery(nestedQuery("lpi").query(matchQuery(
           field = "lpi.townName",
           value = token
-        ).fuzziness(defaultFuzziness)).boost(queryParams.townName.lpiTownNameBoost)),
+        ).fuzziness(defaultFuzziness)).scoreMode("Max")).boost(queryParams.townName.lpiTownNameBoost)),
       tokens.get(Tokens.townName).map(token =>
         constantScoreQuery(matchQuery(
           field = "paf.dependentLocality",
@@ -278,10 +277,10 @@ class AddressIndexRepository @Inject()(
           value = token
         ).fuzziness(defaultFuzziness)).boost(queryParams.townName.pafWelshDependentLocalityBoost)),
       tokens.get(Tokens.townName).map(token =>
-        constantScoreQuery(matchQuery(
+        constantScoreQuery(nestedQuery("lpi").query(matchQuery(
           field = "lpi.locality",
           value = token
-        ).fuzziness(defaultFuzziness)).boost(queryParams.townName.lpiLocalityBoost)),
+        ).fuzziness(defaultFuzziness)).scoreMode("Max")).boost(queryParams.townName.lpiLocalityBoost)),
       tokens.get(Tokens.townName).map(token =>
         constantScoreQuery(matchQuery(
           field = "paf.doubleDependentLocality",
@@ -315,10 +314,10 @@ class AddressIndexRepository @Inject()(
           value = token
         )).boost(queryParams.postcode.pafPostcodeBoost)),
       tokens.get(Tokens.postcode).map(token =>
-        constantScoreQuery(matchQuery(
+        constantScoreQuery(nestedQuery("lpi").query(matchQuery(
           field = "lpi.postcodeLocator",
           value = token
-        )).boost(queryParams.postcode.lpiPostcodeLocatorBoost)),
+        )).scoreMode("Max")).boost(queryParams.postcode.lpiPostcodeLocatorBoost)),
       tokens.get(Tokens.postcodeIn).map(token =>
         constantScoreQuery(matchQuery(
           field = "postcodeIn",
@@ -336,25 +335,25 @@ class AddressIndexRepository @Inject()(
           value = token
         )).boost(queryParams.organisationName.pafOrganisationNameBoost)),
       tokens.get(Tokens.organisationName).map(token =>
-        constantScoreQuery(matchQuery(
+        constantScoreQuery(nestedQuery("lpi").query(matchQuery(
           field = "lpi.organisation",
           value = token
-        )).boost(queryParams.organisationName.lpiOrganisationBoost)),
+        )).scoreMode("Max")).boost(queryParams.organisationName.lpiOrganisationBoost)),
       tokens.get(Tokens.organisationName).map(token =>
-        constantScoreQuery(matchQuery(
+        constantScoreQuery(nestedQuery("lpi").query(matchQuery(
           field = "lpi.paoText",
           value = token
-        )).boost(queryParams.organisationName.lpiPaoTextBoost)),
+        )).scoreMode("Max")).boost(queryParams.organisationName.lpiPaoTextBoost)),
       tokens.get(Tokens.organisationName).map(token =>
-        constantScoreQuery(matchQuery(
+        constantScoreQuery(nestedQuery("lpi").query(matchQuery(
           field = "lpi.legalName",
           value = token
-        )).boost(queryParams.organisationName.lpiLegalNameBoost)),
+        )).scoreMode("Max")).boost(queryParams.organisationName.lpiLegalNameBoost)),
       tokens.get(Tokens.organisationName).map(token =>
-        constantScoreQuery(matchQuery(
+        constantScoreQuery(nestedQuery("lpi").query(matchQuery(
           field = "lpi.saoText",
           value = token
-        )).boost(queryParams.organisationName.lpiSaoTextBoost))
+        )).scoreMode("Max")).boost(queryParams.organisationName.lpiSaoTextBoost))
     ).flatten
 
     val departmentNameQuery = Seq(
@@ -364,10 +363,10 @@ class AddressIndexRepository @Inject()(
           value = token
         )).boost(queryParams.departmentName.pafDepartmentNameBoost)),
       tokens.get(Tokens.departmentName).map(token =>
-        constantScoreQuery(matchQuery(
+        constantScoreQuery(nestedQuery("lpi").query(matchQuery(
           field = "lpi.legalName",
           value = token
-        )).boost(queryParams.departmentName.lpiLegalNameBoost))
+        )).scoreMode("Max")).boost(queryParams.departmentName.lpiLegalNameBoost))
     ).flatten
 
     val localityQuery = Seq(
@@ -382,10 +381,10 @@ class AddressIndexRepository @Inject()(
           value = token
         ).fuzziness(defaultFuzziness)).boost(queryParams.locality.pafWelshPostTownBoost)),
       tokens.get(Tokens.locality).map(token =>
-        constantScoreQuery(matchQuery(
+        constantScoreQuery(nestedQuery("lpi").query(matchQuery(
           field = "lpi.townName",
           value = token
-        ).fuzziness(defaultFuzziness)).boost(queryParams.locality.lpiTownNameBoost)),
+        ).fuzziness(defaultFuzziness)).scoreMode("Max")).boost(queryParams.locality.lpiTownNameBoost)),
       tokens.get(Tokens.locality).map(token =>
         constantScoreQuery(matchQuery(
           field = "paf.dependentLocality",
@@ -397,10 +396,10 @@ class AddressIndexRepository @Inject()(
           value = token
         ).fuzziness(defaultFuzziness)).boost(queryParams.locality.pafWelshDependentLocalityBoost)),
       tokens.get(Tokens.locality).map(token =>
-        constantScoreQuery(matchQuery(
+        constantScoreQuery(nestedQuery("lpi").query(matchQuery(
           field = "lpi.locality",
           value = token
-        ).fuzziness(defaultFuzziness)).boost(queryParams.locality.lpiLocalityBoost)),
+        ).fuzziness(defaultFuzziness)).scoreMode("Max")).boost(queryParams.locality.lpiLocalityBoost)),
       tokens.get(Tokens.locality).map(token =>
         constantScoreQuery(matchQuery(
           field = "paf.doubleDependentLocality",
@@ -420,10 +419,10 @@ class AddressIndexRepository @Inject()(
         matchQuery("paf.pafAll", normalizedInput)
           .minimumShouldMatch(queryParams.fallbackMinimumShouldMatch)
           .analyzer(CustomAnalyzer("welsh_split_synonyms_analyzer")),
-        matchQuery("lpi.nagAll", normalizedInput)
+        nestedQuery("lpi").query(matchQuery("lpi.nagAll", normalizedInput)
           .minimumShouldMatch(queryParams.fallbackMinimumShouldMatch)
           .analyzer(CustomAnalyzer("welsh_split_synonyms_analyzer"))
-      ).boost(queryParams.fallbackQueryBoost)
+      ).scoreMode("Max")).boost(queryParams.fallbackQueryBoost)
 
     val bestOfTheLotQueries = Seq(
       buildingNumberQuery,
