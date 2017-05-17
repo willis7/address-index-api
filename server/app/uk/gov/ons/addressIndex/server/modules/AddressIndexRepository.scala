@@ -419,7 +419,7 @@ class AddressIndexRepository @Inject()(
         matchQuery("paf.pafAll", normalizedInput)
           .minimumShouldMatch(queryParams.fallbackMinimumShouldMatch)
           .analyzer(CustomAnalyzer("welsh_split_synonyms_analyzer")),
-        nestedQuery("lpi").query(matchQuery("lpi.nagAll", normalizedInput)
+        nestedQuery("lpi").query(matchQuery("lpi.nagAll", normalizedInput).boost(1.5)
           .minimumShouldMatch(queryParams.fallbackMinimumShouldMatch)
           .analyzer(CustomAnalyzer("welsh_split_synonyms_analyzer"))
       ).scoreMode("max")).boost(queryParams.fallbackQueryBoost)
