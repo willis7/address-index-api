@@ -36,7 +36,7 @@ sbt docker:publishLocal
 Run the api:
 
 ```shell
-docker run -p 9000:9000 address-index-server:0.0.1 -DONS_AI_API_ES_URI=172.17.0.2 -DONS_AI_API_ES_PORT=9200 -DONS_AI_API_ES_CLUSTER_NAME=elasticsearch
+docker run address-index-server:0.0.1 -DONS_AI_API_ES_URI=172.17.0.2 -DONS_AI_API_ES_PORT=9200 -DONS_AI_API_ES_CLUSTER_NAME=elasticsearch
 ```
 
 Run the ui:
