@@ -18,6 +18,34 @@
 * `re-start` utilise sbt-revolver, we have some eager singletons which load share objects
 * Go to web browser `localhost:9000`
 
+### Running Instructions (Docker)
+
+Firstly, start an ElasticSearch container.
+
+```shell
+docker pull elasticsearch:2.4
+docker run -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" elasticsearch:2.4
+```
+
+Publish the docker images for the API and UI:
+
+```shell
+sbt docker:publishLocal
+```
+
+Run the api:
+
+```shell
+docker run -p 9000:9000 address-index-server:0.0.1 -DONS_AI_API_ES_URI=172.17.0.2 -DONS_AI_API_ES_PORT=9200 -DONS_AI_API_ES_CLUSTER_NAME=elasticsearch
+```
+
+Run the ui:
+
+```shell
+docker run -p 9000:9000 address-index-demo-ui:0.0.1
+```
+
+
 ### Contribution guidelines ###
 
 * Scaladoc
