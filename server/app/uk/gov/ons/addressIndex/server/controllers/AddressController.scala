@@ -39,6 +39,17 @@ class AddressController @Inject()(
   val valid: String = "valid"
   val notRequired: String = "not required"
 
+  def retryFunc[T](n: Int)(fn: => T): T = {
+    try {
+      fn
+    } catch {
+      case e =>
+        logger.info ("retry = " + n)
+        if (n > 1) retryFunc(n - 1)(fn)
+        else throw e
+    }
+  }
+
   /**
     * Address query API
     *
@@ -46,7 +57,8 @@ class AddressController @Inject()(
     * @return Json response with addresses information
     */
   def addressQuery(input: String, offset: Option[String] = None, limit: Option[String] = None, retry: Option[String] = None, filter: Option[String] = None): Action[AnyContent] = Action async { implicit req =>
-   // logger.info(s"#addressQuery:\ninput $input, offset: ${offset.getOrElse("default")}, limit: ${limit.getOrElse("default")}")
+  retryFunc(10) {
+    // logger.info(s"#addressQuery:\ninput $input, offset: ${offset.getOrElse("default")}, limit: ${limit.getOrElse("default")}")
     val startingTime = System.currentTimeMillis()
 
     // check API key
@@ -116,13 +128,13 @@ class AddressController @Inject()(
     } else if (input.isEmpty) {
       writeSplunkLogs(badRequestErrorMessage = EmptyQueryAddressResponseError.message)
       futureJsonBadRequest(EmptySearch)
-    } else if (filter.nonEmpty && !filterString.matches("""\b(residential|commercial|C|C\w+|L|L\w+|M|M\w+|O|O\w+|P|P\w+|R|R\w+|U|U\w+|X|X\w+|Z|Z\w+)\b.*""") ) {
+    } else if (filter.nonEmpty && !filterString.matches("""\b(residential|commercial|C|C\w+|L|L\w+|M|M\w+|O|O\w+|P|P\w+|R|R\w+|U|U\w+|X|X\w+|Z|Z\w+)\b.*""")) {
       writeSplunkLogs(badRequestErrorMessage = FilterInvalidError.message)
       futureJsonBadRequest(FilterInvalid)
     } else {
       val tokens = parser.parse(input)
 
-    //  logger.info(s"#addressQuery parsed:\n${tokens.map{case (label, token) => s"label: $label , value:$token"}.mkString("\n")}")
+      //  logger.info(s"#addressQuery parsed:\n${tokens.map{case (label, token) => s"label: $label , value:$token"}.mkString("\n")}")
 
       val request: Future[HybridAddresses] = esRepo.queryAddresses(tokens, offsetInt, limitInt, filterString)
 
@@ -133,7 +145,7 @@ class AddressController @Inject()(
 
         val scoredAdresses = HopperScoreHelper.getScoresForAddresses(addresses, tokens)
 
-        addresses.foreach{ address =>
+        addresses.foreach { address =>
           writeSplunkLogs(formattedOutput = address.formattedAddressNag, numOfResults = total.toString, score = address.underlyingScore.toString)
         }
 
@@ -155,28 +167,29 @@ class AddressController @Inject()(
             status = OkAddressResponseStatus
           )
         )
-      }.recover{
+      }.recover {
         case NonFatal(exception) =>
 
           writeSplunkLogs(badRequestErrorMessage = FailedRequestToEsError.message)
 
           logger.warn(s"Could not handle individual request (address input), problem with ES ${exception.getMessage}")
-         // if there is a connection reset by peer or similar error due to inactivity
-         // we want to retry a few times to wake up the index connection
-          val retries = retry.getOrElse("5")
-          val numRetries = Try(retries.toInt).toOption.getOrElse(5)
-          val newRetries = {
-            if (numRetries > 5) 5 else numRetries - 1
-          }
-          if (newRetries > 0) {
-            logger.warn("retrying single address request retries remaining = " + newRetries)
-            Redirect(uk.gov.ons.addressIndex.server.controllers.routes.AddressController.addressQuery(input,offset,limit,Some(newRetries.toString),filter))
-          } else {
+          // if there is a connection reset by peer or similar error due to inactivity
+          // we want to retry a few times to wake up the index connection
+    //      val retries = retry.getOrElse("5")
+    //      val numRetries = Try(retries.toInt).toOption.getOrElse(5)
+     //     val newRetries = {
+      //      if (numRetries > 5) 5 else numRetries - 1
+      //    }
+     //     if (newRetries > 0) {
+      //      logger.warn("retrying single address request retries remaining = " + newRetries)
+       //     Redirect(uk.gov.ons.addressIndex.server.controllers.routes.AddressController.addressQuery(input, offset, limit, Some(newRetries.toString), filter))
+       //   } else {
             InternalServerError(Json.toJson(FailedRequestToEs))
-          }
+      //    }
       }
 
     }
+   }
   }
 
   /**
