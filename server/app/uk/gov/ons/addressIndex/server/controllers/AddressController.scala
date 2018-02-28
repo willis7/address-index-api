@@ -184,7 +184,8 @@ class AddressController @Inject()(
       //      logger.warn("retrying single address request retries remaining = " + newRetries)
        //     Redirect(uk.gov.ons.addressIndex.server.controllers.routes.AddressController.addressQuery(input, offset, limit, Some(newRetries.toString), filter))
        //   } else {
-            InternalServerError(Json.toJson(FailedRequestToEs))
+          throw exception
+          InternalServerError(Json.toJson(FailedRequestToEs))
       //    }
       }
 
