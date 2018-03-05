@@ -592,6 +592,7 @@ class AddressIndexRepository @Inject()(
       .sortBy(FieldSortDefinition("_score").order(SortOrder.DESC), FieldSortDefinition("uprn").order(SortOrder.ASC))
       .trackScores(true)
       .searchType(SearchType.DfsQueryThenFetch)
+      .keepAlive("1m")
 
   }
 

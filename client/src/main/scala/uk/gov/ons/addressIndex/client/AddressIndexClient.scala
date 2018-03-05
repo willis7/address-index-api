@@ -120,7 +120,7 @@ object AddressIndexClientHelper {
   implicit class AddressIndexPathToWsAugmenter(p: AddressIndexPath)
     (implicit client: WSClient, host: AddressIndexServerHost) {
     def toReq(): WSRequest = {
-      client url s"${host.value}${p.path}" withMethod p.path withFollowRedirects false
+      client url s"${host.value}${p.path}" withMethod p.path
     }
   }
 
