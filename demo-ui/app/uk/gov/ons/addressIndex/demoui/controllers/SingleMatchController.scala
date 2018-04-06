@@ -15,7 +15,7 @@ import uk.gov.ons.addressIndex.demoui.modules.{DemoUIAddressIndexVersionModule, 
 import uk.gov.ons.addressIndex.demoui.utils.ClassHierarchy
 import uk.gov.ons.addressIndex.model.{AddressIndexSearchRequest, AddressIndexUPRNRequest}
 import uk.gov.ons.addressIndex.model.server.response.{AddressBySearchResponseContainer, AddressByUprnResponseContainer}
-
+import uk.gov.ons.addressIndex.demoui.utils.RelativesExpander
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 import scala.util.Try
@@ -35,6 +35,7 @@ class SingleMatchController @Inject()(
    langs: Langs,
    apiClient: AddressIndexClientInstance,
    classHierarchy: ClassHierarchy,
+   relativesExpander: RelativesExpander,
    version: DemoUIAddressIndexVersionModule
 )(implicit ec: ExecutionContext) extends BaseController with I18nSupport {
 
@@ -243,14 +244,13 @@ class SingleMatchController @Inject()(
       ) map { resp: AddressByUprnResponseContainer =>
         val filledForm = SingleMatchController.form.fill(SingleSearchForm(addressText,filterText))
 
-          val nags = resp.response.address.flatMap(_.nag)
-          val classCodes: Map[String, String] = nags.map(nag =>
+        val nags = resp.response.address.flatMap(_.nag)
+        val classCodes: Map[String, String] = nags.map(nag =>
             (nag.uprn, classHierarchy.analyseClassCode(nag.classificationCode))).toMap
 
-          val warningMessage =
-            if (resp.status.code == 200) None
-            else Some(s"${resp.status.code} ${resp.status.message} : ${resp.errors.headOption.map(_.message).getOrElse("")}")
-
+        val warningMessage =
+          if (resp.status.code == 200) None
+          else Some(s"${resp.status.code} ${resp.status.message} : ${resp.errors.headOption.map(_.message).getOrElse("")}")
 
         val viewToRender = uk.gov.ons.addressIndex.demoui.views.html.uprnResult(
           singleSearchForm = filledForm,
@@ -314,10 +314,12 @@ class SingleMatchController @Inject()(
           val classCodes: Map[String, String] = nags.map(nag =>
             (nag.uprn, classHierarchy.analyseClassCode(nag.classificationCode))).toMap
 
+          val expandedRels = Try(relativesExpander.expandRelatives(resp.response.address.get.relatives)).getOrElse(Seq())
+          logger info("expanded rels = " + expandedRels.toString())
+
           val warningMessage =
             if (resp.status.code == 200) None
             else Some(s"${resp.status.code} ${resp.status.message} : ${resp.errors.headOption.map(_.message).getOrElse("")}")
-
 
           val viewToRender = uk.gov.ons.addressIndex.demoui.views.html.result(
             singleSearchForm = filledForm,
@@ -325,6 +327,7 @@ class SingleMatchController @Inject()(
             warningMessage = warningMessage,
             addressByUprnResponse = Some(resp.response),
             classification = Some(classCodes),
+            expandedRels = Some(expandedRels),
             version = version,
             isClerical = false,
             apiUrl = apiUrl,

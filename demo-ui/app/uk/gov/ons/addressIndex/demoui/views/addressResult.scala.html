@@ -1,4 +1,5 @@
 @import uk.gov.ons.addressIndex.model.server.response.AddressResponseAddress
+@import uk.gov.ons.addressIndex.model.db.index.ExpandedRelative
 @import uk.gov.ons.addressIndex.parsers.Tokens
 @import java.text.SimpleDateFormat
 
@@ -7,6 +8,7 @@ address: AddressResponseAddress,
 filter: String,
 maxScore: Double,
 classification: Option[Map[String, String]],
+expandedRels: Option[Seq[ExpandedRelative]],
 tokens: Map[String, String] = Map.empty[String, String],
 pageNum: Int = 0,
 index: Int = 0,
@@ -107,9 +109,14 @@ apiKey: String = ""
                         </tr>
                         </thead>
                         <tbody id="@position@address.uprn">
-                        @relative.siblings.sorted.map { uprn =>
-                        <script>hierarchyResult("@uprn", "@position@address.uprn", '@apiUrl', '@apiKey')</script>
-                        }
+
+                            @expandedRels.getOrElse(Seq()).map { rels =>
+                            <tr><td>1234</td>
+                                <td>
+                            @rels.formattedAddresses.map { formattedAddress => @formattedAddress }
+                                </td>
+                        </tr>
+                            }
                         </tbody>
                     </table>
                 </article>
