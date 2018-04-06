@@ -110,13 +110,13 @@ apiKey: String = ""
                         </thead>
                         <tbody id="@position@address.uprn">
 
-                            @expandedRels.getOrElse(Seq()).map { rels =>
-                            <tr><td>1234</td>
+                            @expandedRels.getOrElse(Seq()).map { rel => @rel.siblings.map {expandedSibling =>
+                            <tr><td>@expandedSibling.uprn</td>
                                 <td>
-                            @rels.formattedAddresses.map { formattedAddress => @formattedAddress }
+                            @expandedSibling.formattedAddress
                                 </td>
                         </tr>
-                            }
+                            } } 
                         </tbody>
                     </table>
                 </article>

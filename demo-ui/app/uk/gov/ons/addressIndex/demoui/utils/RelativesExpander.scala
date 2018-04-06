@@ -2,7 +2,7 @@ package uk.gov.ons.addressIndex.demoui.utils
 
 import java.util.UUID
 
-import uk.gov.ons.addressIndex.model.db.index.{ExpandedRelative, Relative}
+import uk.gov.ons.addressIndex.model.db.index.{ExpandedRelative, ExpandedSibling, Relative}
 import uk.gov.ons.addressIndex.model.server.response.{AddressByUprnResponseContainer, AddressResponseRelative}
 import javax.inject.{Inject, Singleton}
 import uk.gov.ons.addressIndex.demoui.client.AddressIndexClientInstance
@@ -25,13 +25,12 @@ class RelativesExpander @Inject ()(
   def expandRelative (rel: AddressResponseRelative):  ExpandedRelative = {
     ExpandedRelative (
       rel.level,
-      rel.siblings,
-      getAddressesFromSiblings(rel.siblings)
+      getExpandedSiblings(rel.siblings)
     )
   }
 
-  def getAddressesFromSiblings(uprns: Seq[Long]): Seq[String] = {
-    uprns.map(uprn => Await.result(getAddressFromUprn(uprn),1 seconds))
+  def getExpandedSiblings(uprns: Seq[Long]): Seq[ExpandedSibling] = {
+    uprns.map(uprn => new ExpandedSibling(uprn,Await.result(getAddressFromUprn(uprn),1 seconds)))
   }
 
   def getAddressFromUprn(uprn: Long): Future[String] = {

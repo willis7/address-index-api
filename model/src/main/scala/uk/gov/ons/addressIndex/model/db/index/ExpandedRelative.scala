@@ -6,7 +6,11 @@ package uk.gov.ons.addressIndex.model.db.index
   */
 case class ExpandedRelative(
   level: Int,
-  siblings: Seq[Long],
-  formattedAddresses: Seq[String]
+  siblings: Seq[ExpandedSibling]
+)
+
+case class ExpandedSibling(
+  uprn: Long,
+  formattedAddress: String
 )
 
