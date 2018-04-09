@@ -30,7 +30,7 @@ class RelativesExpander @Inject ()(
   }
 
   def getExpandedSiblings(uprns: Seq[Long]): Seq[ExpandedSibling] = {
-    uprns.map(uprn => new ExpandedSibling(uprn,Await.result(getAddressFromUprn(uprn),1 seconds)))
+    uprns.map(uprn => new ExpandedSibling(uprn,Await.result(getAddressFromUprn(uprn),2 seconds)))
   }
 
   def getAddressFromUprn(uprn: Long): Future[String] = {
