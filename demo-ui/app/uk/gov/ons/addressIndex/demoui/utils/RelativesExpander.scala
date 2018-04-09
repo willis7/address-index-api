@@ -41,7 +41,7 @@ class RelativesExpander @Inject ()(
         id = UUID.randomUUID,
         apiKey = ""
       )
-    ), 2 seconds
+    ), 5 seconds
     ).response.address.get.formattedAddress.mkString
   }
 }
