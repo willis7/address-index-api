@@ -30,19 +30,18 @@ class RelativesExpander @Inject ()(
   }
 
   def getExpandedSiblings(uprns: Seq[Long]): Seq[ExpandedSibling] = {
-    uprns.map(uprn => new ExpandedSibling(uprn,Await.result(getAddressFromUprn(uprn),2 seconds)))
+    uprns.map(uprn => new ExpandedSibling(uprn,getAddressFromUprn(uprn)))
   }
 
-  def getAddressFromUprn(uprn: Long): Future[String] = {
+  def getAddressFromUprn(uprn: Long): String = {
     val numericUPRN = BigInt(uprn)
-    apiClient.uprnQuery(
+    Await.result(apiClient.uprnQuery(
       AddressIndexUPRNRequest(
         uprn = numericUPRN,
         id = UUID.randomUUID,
         apiKey = ""
       )
-    ) map { resp: AddressByUprnResponseContainer =>
-      Try(resp.response.address.get.formattedAddress).getOrElse("not found")
-    } map {relstring => relstring.mkString}
+    ), 1 second
+    ).response.address.get.formattedAddress.mkString
   }
 }
