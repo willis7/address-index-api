@@ -299,7 +299,6 @@ class SingleMatchController @Inject()(
           Ok(viewToRender)
         )
       } else {
-        //   logger info("UPRN with supplied input address " + addressText)
         val numericUPRN = BigInt(addressText)
         apiClient.uprnQuery(
           AddressIndexUPRNRequest(
@@ -318,7 +317,6 @@ class SingleMatchController @Inject()(
             add.relatives
           }
           val expandedRels = Try(relativesExpander.expandRelatives(apiKey, rels.getOrElse(Seq()))).getOrElse(Seq())
-          logger info("expanded rels = " + expandedRels.toString())
 
           val warningMessage =
             if (resp.status.code == 200) None
