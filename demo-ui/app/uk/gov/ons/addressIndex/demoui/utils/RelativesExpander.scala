@@ -18,38 +18,38 @@ class RelativesExpander @Inject ()(
   apiClient: AddressIndexClientInstance
 )(implicit ec: ExecutionContext) {
 
-  def expandRelatives(relatives: Seq[AddressResponseRelative]): Seq[ExpandedRelative] = {
-    relatives.map{rel => expandRelative(rel)}
+  def expandRelatives(apiKey: String, relatives: Seq[AddressResponseRelative]): Seq[ExpandedRelative] = {
+    relatives.map{rel => expandRelative(apiKey,rel)}
   }
 
-  def expandRelative (rel: AddressResponseRelative):  ExpandedRelative = {
+  def expandRelative (apiKey: String, rel: AddressResponseRelative):  ExpandedRelative = {
     ExpandedRelative (
       rel.level,
     //  Await.result(getExpandedSiblings(rel.siblings), 10 seconds)
-        getExpandedSiblings(rel.siblings)
+        getExpandedSiblings(apiKey, rel.siblings)
     )
   }
 
   def sleep(duration: Long) { Thread.sleep(duration) }
 
-  def getExpandedSiblings(uprns: Seq[Long]): Seq[ExpandedSibling] = {
+  def getExpandedSiblings(apiKey: String, uprns: Seq[Long]): Seq[ExpandedSibling] = {
  //   val sibs = Seq[ExpandedSibling]()
     uprns.map(uprn => {
   //    val futUprn = getAddressFromUprn(uprn)
-      new ExpandedSibling(uprn,Await.result(getAddressFromUprn(uprn), 2 seconds))
+      new ExpandedSibling(uprn,Await.result(getAddressFromUprn(apiKey,uprn), 2 seconds))
     })
   //  sleep(1000)
  //   println("sibs" + sibs)
  //   return Future(sibs)
   }
 
-  def getAddressFromUprn(uprn: Long): Future[String] = {
+  def getAddressFromUprn(apiKey: String, uprn: Long): Future[String] = {
     val numericUPRN = BigInt(uprn)
     apiClient.uprnQuery(
       AddressIndexUPRNRequest(
         uprn = numericUPRN,
         id = UUID.randomUUID,
-        apiKey = ""
+        apiKey = apiKey
       )
     ).map { resp: AddressByUprnResponseContainer =>
       println(resp)

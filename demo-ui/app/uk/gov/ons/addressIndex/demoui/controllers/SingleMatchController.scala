@@ -317,7 +317,7 @@ class SingleMatchController @Inject()(
           val rels = resp.response.address.map {add =>
             add.relatives
           }
-          val expandedRels = Try(relativesExpander.expandRelatives(rels.getOrElse(Seq()))).getOrElse(Seq())
+          val expandedRels = Try(relativesExpander.expandRelatives(apiKey, rels.getOrElse(Seq()))).getOrElse(Seq())
           logger info("expanded rels = " + expandedRels.toString())
 
           val warningMessage =
