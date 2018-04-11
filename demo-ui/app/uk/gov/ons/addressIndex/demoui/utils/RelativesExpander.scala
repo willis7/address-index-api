@@ -52,6 +52,7 @@ class RelativesExpander @Inject ()(
         apiKey = ""
       )
     ).map { resp: AddressByUprnResponseContainer =>
+      println(resp)
       resp.response.address.map ({ add =>
         add.formattedAddress
       }).getOrElse(uprn + "not found")
