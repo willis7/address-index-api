@@ -314,7 +314,10 @@ class SingleMatchController @Inject()(
           val classCodes: Map[String, String] = nags.map(nag =>
             (nag.uprn, classHierarchy.analyseClassCode(nag.classificationCode))).toMap
 
-          val expandedRels = Try(relativesExpander.expandRelatives(resp.response.address.get.relatives)).getOrElse(Seq())
+          val rels = resp.response.address.map {add =>
+            add.relatives
+          }
+          val expandedRels = Try(relativesExpander.expandRelatives(rels.getOrElse(Seq()))).getOrElse(Seq())
           logger info("expanded rels = " + expandedRels.toString())
 
           val warningMessage =

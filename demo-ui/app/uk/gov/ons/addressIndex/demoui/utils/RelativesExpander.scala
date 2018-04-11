@@ -11,7 +11,7 @@ import uk.gov.ons.addressIndex.model.AddressIndexUPRNRequest
 import scala.language.postfixOps
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 @Singleton
 class RelativesExpander @Inject ()(
@@ -25,23 +25,34 @@ class RelativesExpander @Inject ()(
   def expandRelative (rel: AddressResponseRelative):  ExpandedRelative = {
     ExpandedRelative (
       rel.level,
-      getExpandedSiblings(rel.siblings)
+    //  Await.result(getExpandedSiblings(rel.siblings), 10 seconds)
+        getExpandedSiblings(rel.siblings)
     )
   }
 
+  def sleep(duration: Long) { Thread.sleep(duration) }
+
   def getExpandedSiblings(uprns: Seq[Long]): Seq[ExpandedSibling] = {
-    uprns.map(uprn => new ExpandedSibling(uprn,getAddressFromUprn(uprn)))
+ //   val sibs = Seq[ExpandedSibling]()
+    uprns.map(uprn => {
+  //    val futUprn = getAddressFromUprn(uprn)
+      new ExpandedSibling(uprn,Await.result(getAddressFromUprn(uprn), 2 seconds))
+    })
+  //  sleep(1000)
+ //   println("sibs" + sibs)
+ //   return Future(sibs)
   }
 
-  def getAddressFromUprn(uprn: Long): String = {
+  def getAddressFromUprn(uprn: Long): Future[String] = {
     val numericUPRN = BigInt(uprn)
-    Await.result(apiClient.uprnQuery(
+    apiClient.uprnQuery(
       AddressIndexUPRNRequest(
         uprn = numericUPRN,
         id = UUID.randomUUID,
         apiKey = ""
       )
-    ), 5 seconds
-    ).response.address.get.formattedAddress.mkString
+    ).map { resp: AddressByUprnResponseContainer =>
+      Try(resp.response.address.get.formattedAddress).getOrElse("not found")
+    }
   }
 }
