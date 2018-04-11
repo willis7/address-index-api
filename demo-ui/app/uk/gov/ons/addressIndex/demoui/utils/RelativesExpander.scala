@@ -25,22 +25,14 @@ class RelativesExpander @Inject ()(
   def expandRelative (apiKey: String, rel: AddressResponseRelative):  ExpandedRelative = {
     ExpandedRelative (
       rel.level,
-    //  Await.result(getExpandedSiblings(rel.siblings), 10 seconds)
         getExpandedSiblings(apiKey, rel.siblings)
     )
   }
 
-  def sleep(duration: Long) { Thread.sleep(duration) }
-
   def getExpandedSiblings(apiKey: String, uprns: Seq[Long]): Seq[ExpandedSibling] = {
- //   val sibs = Seq[ExpandedSibling]()
     uprns.map(uprn => {
-  //    val futUprn = getAddressFromUprn(uprn)
-      new ExpandedSibling(uprn,Await.result(getAddressFromUprn(apiKey,uprn), 2 seconds))
-    })
-  //  sleep(1000)
- //   println("sibs" + sibs)
- //   return Future(sibs)
+      new ExpandedSibling(uprn,Await.result(getAddressFromUprn(apiKey,uprn), 1 seconds))
+      })
   }
 
   def getAddressFromUprn(apiKey: String, uprn: Long): Future[String] = {
@@ -52,11 +44,9 @@ class RelativesExpander @Inject ()(
         apiKey = apiKey
       )
     ).map { resp: AddressByUprnResponseContainer =>
-      println(resp)
       resp.response.address.map ({ add =>
         add.formattedAddress
       }).getOrElse(uprn + "not found")
-   //   Try(resp.response.address.get.formattedAddress).getOrElse(uprn + "not found")
     }
   }
 }
