@@ -1,6 +1,8 @@
 pipeline{
     def sbtHome = tool name: "sbt-0.13.15", type: 'org.jvnet.hudson.plugins.SbtPluginBuilder$SbtInstallation'
-    env.PATH = "$env.PATH:$sbtHome/bin"
+    environment {
+        PATH = "$env.PATH:$sbtHome/bin"
+    }
 
     agent any
     stages{
