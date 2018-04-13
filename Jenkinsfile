@@ -1,8 +1,11 @@
-def sbtHome = tool name: "sbt-0.13.15", type: 'org.jvnet.hudson.plugins.SbtPluginBuilder$SbtInstallation'
-
 pipeline{
+    parameters {
+        string(name: 'sbtHome', 
+            defaultValue: tool(name: "sbt-0.13.15", type: 'org.jvnet.hudson.plugins.SbtPluginBuilder$SbtInstallation'), 
+            description: 'sbt home dir?')
+    }
     environment {
-        PATH = "$env.PATH:$sbtHome/bin"
+        PATH = "${env.PATH}:${params.sbtHome}/bin"
     }
 
     agent any
